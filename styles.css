@@ -1,0 +1,502 @@
+/* Dark Academia Theme & Variables */
+:root {
+    --bg-color: #FDFBF7; /* Soft Vanilla */
+    --card-bg: #FFFFFF; /* White */
+    --text-primary: #2C2621; /* Espresso Brown */
+    --text-secondary: #4A4A4A; /* Charcoal */
+    --accent-color: #5C4A3D; /* Deep Wood */
+    
+    /* Traffic Light Colors */
+    --state-green: #4CAF50; /* Vibrant Green */
+    --state-yellow: #FF9800; /* Vibrant Orange/Yellow */
+    --state-red: #F44336; /* Vibrant Red */
+    
+    --shadow-sm: 0 4px 6px rgba(44, 38, 33, 0.05);
+    --shadow-md: 0 10px 15px rgba(44, 38, 33, 0.1);
+    --shadow-lg: 0 20px 25px rgba(44, 38, 33, 0.15);
+    
+    --font-heading: 'Playfair Display', serif;
+    --font-body: 'Inter', sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-body);
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Header */
+.top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    background-color: var(--card-bg);
+    border-bottom: 1px solid rgba(92, 74, 61, 0.1);
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--accent-color);
+    flex: 1;
+}
+
+.header-title {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1.75rem;
+    color: var(--text-primary);
+    text-align: center;
+    flex: 2;
+}
+
+.header-right {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.last-synced {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background-color: rgba(92, 74, 61, 0.05);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    border: 1px solid rgba(92, 74, 61, 0.1);
+}
+
+/* Dashboard Container */
+.dashboard-container {
+    flex: 1;
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Overall Stats Banner */
+.overall-stats-banner {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 2rem;
+    border: 1px solid rgba(92, 74, 61, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.overall-stats-content h2 {
+    font-family: var(--font-heading);
+    color: var(--accent-color);
+    margin-bottom: 1rem;
+}
+
+.overall-stats-data {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+/* Overall Ring */
+.overall-ring {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    position: relative;
+    background: conic-gradient(var(--status-color) var(--percentage, 0%), rgba(92, 74, 61, 0.1) 0);
+    transition: background 0.3s ease;
+}
+
+.overall-ring::before {
+    content: '';
+    position: absolute;
+    inset: 8px; /* ring thickness */
+    background-color: var(--card-bg);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.ring-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+}
+
+.overall-percentage {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--status-color, var(--text-primary));
+}
+
+.overall-numbers .fraction {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+}
+
+.overall-numbers .fraction strong {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+}
+
+.availability-status {
+    font-weight: 600;
+    color: var(--status-color, var(--text-secondary));
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+.sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.sort-controls select {
+    padding: 0.5rem;
+    border: 1px solid rgba(92, 74, 61, 0.2);
+    border-radius: 4px;
+    background-color: var(--bg-color);
+    font-family: var(--font-body);
+    color: var(--text-primary);
+    cursor: pointer;
+    outline: none;
+}
+
+/* Room Grid */
+.room-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+/* Room Card (Now acting as a button) */
+.room-card {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(92, 74, 61, 0.05);
+    cursor: pointer;
+}
+
+.room-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.room-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 6px;
+    background-color: var(--status-color, var(--text-secondary));
+}
+
+.card-header {
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.room-title {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.card-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+/* Occupancy Ring */
+.occupancy-ring {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    position: relative;
+    background: conic-gradient(var(--status-color) var(--percentage, 0%), rgba(92, 74, 61, 0.1) 0);
+    margin-bottom: 1rem;
+    transition: background 0.3s ease;
+}
+
+.occupancy-ring::before {
+    content: '';
+    position: absolute;
+    inset: 10px; /* ring thickness */
+    background-color: var(--card-bg);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.occupancy-percentage {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--status-color, var(--text-primary));
+    line-height: 1;
+}
+
+.occupancy-label {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.capacity-counter {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.capacity-counter strong {
+    color: var(--text-primary);
+}
+
+/* Card Footer (Amenities) */
+.card-footer {
+    margin-top: auto;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(92, 74, 61, 0.1);
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
+.amenity {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    position: relative;
+    cursor: help;
+    transition: color 0.2s ease;
+}
+
+.amenity:hover {
+    color: var(--accent-color);
+}
+
+.amenity::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 130%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--text-primary);
+    color: var(--bg-color);
+    padding: 0.4rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-family: var(--font-body);
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, bottom 0.2s ease;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.amenity::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: var(--text-primary) transparent transparent transparent;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, bottom 0.2s ease;
+    pointer-events: none;
+}
+
+.amenity:hover::after {
+    opacity: 1;
+    visibility: visible;
+    bottom: 150%;
+}
+
+.amenity:hover::before {
+    opacity: 1;
+    visibility: visible;
+    bottom: 120%;
+}
+
+/* Room Detail View */
+.back-button {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    transition: color 0.2s ease;
+}
+
+.back-button:hover {
+    color: var(--accent-color);
+}
+
+.detail-layout {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 2rem;
+}
+
+.detail-sidebar {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(92, 74, 61, 0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-title {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.detail-amenities {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid rgba(92, 74, 61, 0.1);
+}
+
+.detail-stats-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.detail-ring {
+    width: 200px;
+    height: 200px;
+}
+
+.detail-ring::before {
+    inset: 15px; /* Thicker ring for detail view */
+}
+
+.detail-percentage {
+    font-size: 3.5rem;
+}
+
+.detail-capacity {
+    font-size: 1.25rem;
+}
+
+.detail-chart-area {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(92, 74, 61, 0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-title {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+}
+
+.chart-container {
+    flex: 1;
+    position: relative;
+    width: 100%;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .room-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .detail-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .top-nav {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+    }
+    .header-title {
+        order: -1;
+        font-size: 1.4rem;
+        margin-bottom: 0.5rem;
+    }
+    .header-right {
+        justify-content: center;
+    }
+    .room-grid {
+        grid-template-columns: 1fr;
+    }
+    .overall-stats-banner {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1.5rem;
+    }
+    .sort-controls {
+        align-self: flex-start;
+    }
+}

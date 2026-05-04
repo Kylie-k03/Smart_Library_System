@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Library Occupancy Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="top-nav">
+        <div class="logo-container">
+            <i class="fa-solid fa-building-columns"></i>
+            <span class="logo-text">R V College Library</span>
+        </div>
+        <h1 class="header-title">Smart Library Occupancy Dashboard</h1>
+        <div class="header-right">
+            <span class="last-synced">Last Synced: <span id="timestamp-text">--:--</span></span>
+        </div>
+    </header>
+
+    <!-- Main Dashboard View -->
+    <main class="dashboard-container" id="main-dashboard-view">
+        
+        <!-- Overall Stats Banner -->
+        <section class="overall-stats-banner">
+            <div class="overall-stats-content">
+                <h2>Overall Library Occupancy</h2>
+                <div class="overall-stats-data">
+                    <div class="overall-ring" id="overall-ring" style="--percentage: 0%;">
+                        <div class="ring-content">
+                            <span class="overall-percentage" id="overall-percentage">0%</span>
+                        </div>
+                    </div>
+                    <div class="overall-numbers">
+                        <p class="fraction"><strong id="overall-occupied">0</strong> / <span id="overall-total">0</span> Seats Full</p>
+                        <p class="availability-status" id="overall-status-text">Calculating...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="sort-controls">
+                <label for="sort-select">Sort by:</label>
+                <select id="sort-select">
+                    <option value="most-empty">Most Empty</option>
+                    <option value="most-full">Most Full</option>
+                    <option value="alphabetical">A-Z</option>
+                </select>
+            </div>
+        </section>
+
+        <div id="room-grid" class="room-grid">
+            <!-- Room cards will be dynamically injected here by JS -->
+        </div>
+    </main>
+
+    <!-- Room Detail View (Hidden by default) -->
+    <main class="dashboard-container room-detail-container" id="room-detail-view" style="display: none;">
+        <button id="back-button" class="back-button">
+            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+        </button>
+
+        <div class="detail-layout">
+            <div class="detail-sidebar">
+                <h2 id="detail-title" class="detail-title">Room Title</h2>
+                <div class="detail-amenities" id="detail-amenities">
+                    <!-- Amenities injected here -->
+                </div>
+                
+                <div class="detail-stats-card" id="detail-stats-card">
+                    <div class="occupancy-ring detail-ring" id="detail-ring" style="--percentage: 0%;">
+                        <div class="ring-content">
+                            <span class="occupancy-percentage" id="detail-percentage">0%</span>
+                            <span class="occupancy-label">Full</span>
+                        </div>
+                    </div>
+                    <div class="capacity-counter detail-capacity">
+                        Seats: <strong id="detail-occupied">0</strong> / <span id="detail-total">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-chart-area">
+                <h3 class="chart-title">Historical Trends (Last 12 Hours)</h3>
+                <div class="chart-container">
+                    <canvas id="historicalChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
