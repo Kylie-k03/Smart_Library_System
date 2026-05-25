@@ -1,22 +1,76 @@
-// Dummy data for the 5 rooms
+// TODO: Replace with your actual Firebase configuration
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID"
+};
+
+// Initialize Firebase (Compat version)
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+function getOccupancyColorSVG(percentage) {
+    if (percentage >= 0 && percentage <= 49) return "rgba(129, 199, 132, 0.5)";
+    if (percentage >= 50 && percentage <= 80) return "rgba(255, 241, 118, 0.5)";
+    if (percentage >= 81 && percentage <= 100) return "rgba(229, 115, 115, 0.5)";
+    return "rgba(0, 0, 0, 0.1)";
+}
+
+function updateSVGRoomColor(roomId, percentage) {
+    const roomElement = document.getElementById(roomId);
+    if (roomElement) {
+        roomElement.style.fill = getOccupancyColorSVG(percentage);
+    }
+}
+
+function initLiveFloorPlan() {
+    const occupancyRef = db.ref('library/rooms');
+    occupancyRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            for (const [roomId, percentage] of Object.entries(data)) {
+                updateSVGRoomColor(roomId, percentage);
+            }
+        }
+    });
+}
+
+// Dummy data for the 8 rooms
+// Dummy data for the 9 rooms
+// Dummy data for the 7 rooms
 const roomsData = [
     {
-        id: 'outside-reading',
-        title: 'Outside Reading Area',
+        id: 'collaboration-area',
+        title: 'Collaboration Area',
         totalSeats: 60,
         occupiedSeats: 15, // 25% (Green)
         amenities: ['wifi', 'coffee']
     },
     {
-        id: 'meeting-lounge',
-        title: 'Meeting Lounge',
-        totalSeats: 40,
-        occupiedSeats: 35, // 87.5% (Red)
-        amenities: ['wifi', 'power']
+        id: 'book-shelves',
+        title: 'Book Shelves Area',
+        totalSeats: 30,
+        occupiedSeats: 12, // 40% (Green)
+        amenities: ['wifi', 'quiet']
     },
     {
-        id: 'digital-library',
-        title: 'Digital Library',
+        id: 'meeting-booth',
+        title: 'Meeting Booth',
+        totalSeats: 20,
+        occupiedSeats: 15, // 75% (Yellow)
+        amenities: ['wifi', 'power', 'quiet']
+    },
+    {
+        id: 'digital-media',
+        title: 'Digital Media Section',
+        totalSeats: 40,
+        occupiedSeats: 18, // 45% (Green)
+        amenities: ['wifi', 'power', 'desktop']
+    },
+    {
+        id: 'computer-section',
+        title: 'Computer Section',
         totalSeats: 80,
         occupiedSeats: 50, // 62.5% (Yellow)
         amenities: ['wifi', 'power', 'desktop']
@@ -29,18 +83,11 @@ const roomsData = [
         amenities: ['wifi', 'quiet']
     },
     {
-        id: 'magazine-area',
-        title: 'Magazine Area',
-        totalSeats: 30,
-        occupiedSeats: 12, // 40% (Green)
-        amenities: ['wifi', 'coffee']
-    },
-    {
-        id: 'amphitheatre',
-        title: 'Amphitheatre',
-        totalSeats: 150,
-        occupiedSeats: 100, // 66.6% (Yellow)
-        amenities: ['wifi']
+        id: 'group-work',
+        title: 'Group Work Area',
+        totalSeats: 40,
+        occupiedSeats: 35, // 87.5% (Red)
+        amenities: ['wifi', 'power']
     }
 ];
 
@@ -325,15 +372,34 @@ function updateTimestamp() {
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
+    // Start listening to Firebase for SVG rooms
+    initLiveFloorPlan();
+    
     // Initial Render & Stats
     updateOverallStats();
     sortData('most-empty');
     updateTimestamp();
     
+    // Set initial dummy colors on SVG overlays
+    roomsData.forEach(room => {
+        const percentage = Math.round((room.occupiedSeats / room.totalSeats) * 100);
+        updateSVGRoomColor(room.id, percentage);
+    });
+    
     // Setup Sort Listener
     const sortSelect = document.getElementById('sort-select');
     sortSelect.addEventListener('change', (e) => {
         sortData(e.target.value);
+    });
+
+    // Setup interactive SVG room clicks
+    roomsData.forEach(room => {
+        const roomElement = document.getElementById(room.id);
+        if (roomElement) {
+            roomElement.addEventListener('click', () => {
+                showRoomDetail(room);
+            });
+        }
     });
 
     // Setup Back Button
