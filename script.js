@@ -1,14 +1,25 @@
-// TODO: Replace with your actual Firebase configuration
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT_ID"
+    apiKey: "AIzaSyDccQmni5a0ADbf_kZHY39WjJVznoxbdlk",
+    authDomain: "smart-library-system-b58b5.firebaseapp.com",
+    databaseURL: "https://smart-library-system-b58b5-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "smart-library-system-b58b5",
+    storageBucket: "smart-library-system-b58b5.firebasestorage.app",
+    messagingSenderId: "902943069114",
+    appId: "1:902943069114:web:b219210299fd2456530383"
 };
 
-// Initialize Firebase (Compat version)
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Keep track of active room in detail view
+let activeDetailRoomId = null;
+
+// Track previous occupied seats to detect seat availability transitions
+let previousOccupiedSeats = {};
 
 function getOccupancyColorSVG(percentage) {
     if (percentage >= 0 && percentage <= 49) return "rgba(129, 199, 132, 0.5)";
@@ -24,15 +35,101 @@ function updateSVGRoomColor(roomId, percentage) {
     }
 }
 
+function updateRoomDetailUI(room) {
+    const percentage = Math.round((room.occupiedSeats / room.totalSeats) * 100);
+    const stateInfo = getOccupancyState(percentage);
+
+    const titleEl = document.getElementById('detail-title');
+    if (titleEl) titleEl.textContent = room.title;
+
+    const percentageEl = document.getElementById('detail-percentage');
+    if (percentageEl) percentageEl.textContent = percentage + '%';
+
+    const occupiedEl = document.getElementById('detail-occupied');
+    if (occupiedEl) occupiedEl.textContent = room.occupiedSeats;
+
+    const totalEl = document.getElementById('detail-total');
+    if (totalEl) totalEl.textContent = room.totalSeats;
+    
+    const detailRing = document.getElementById('detail-ring');
+    if (detailRing) {
+        detailRing.style.setProperty('--status-color', stateInfo.colorVar);
+        detailRing.style.setProperty('--percentage', percentage + '%');
+    }
+
+    const amenitiesContainer = document.getElementById('detail-amenities');
+    if (amenitiesContainer) {
+        amenitiesContainer.innerHTML = room.amenities.map(amenity => {
+            const iconData = iconMap[amenity];
+            return `<i class="${iconData.class} amenity" title="${iconData.title}"></i>`;
+        }).join('');
+    }
+}
+
 function initLiveFloorPlan() {
-    const occupancyRef = db.ref('library/rooms');
-    occupancyRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            for (const [roomId, percentage] of Object.entries(data)) {
-                updateSVGRoomColor(roomId, percentage);
+    const occupancyRef = ref(db, 'library/rooms');
+    onValue(occupancyRef, (snapshot) => {
+        let data = snapshot.val();
+        if (!data) {
+            // Auto-populate the database with standard room data on first run
+            const initialData = {};
+            roomsData.forEach(room => {
+                const percentage = Math.round((room.occupiedSeats / room.totalSeats) * 100);
+                initialData[room.id] = percentage;
+            });
+            set(occupancyRef, initialData);
+            data = initialData;
+        }
+        
+        for (const [roomId, percentage] of Object.entries(data)) {
+            updateSVGRoomColor(roomId, percentage);
+            
+            // Sync Firebase database updates back to our in-memory roomsData structure
+            const room = roomsData.find(r => r.id === roomId);
+            if (room) {
+                const prevOccupied = previousOccupiedSeats[roomId];
+                const newOccupied = Math.round((percentage / 100) * room.totalSeats);
+                
+                // Check if a seat opened up
+                if (prevOccupied !== undefined && newOccupied < prevOccupied) {
+                    if (localStorage.getItem('library_waitlisted') === 'true') {
+                        const diff = prevOccupied - newOccupied;
+                        const seatText = diff === 1 ? '1 empty seat' : `${diff} empty seats`;
+                        const msg = ` ${seatText} in ${room.title}`;
+                        
+                        // Show website toast overlay
+                        showToast(msg, 'success');
+                        
+                        // Show native desktop notification
+                        if ('Notification' in window && Notification.permission === 'granted') {
+                            new Notification("Seat Available!", {
+                                body: msg,
+                                icon: 'favicon.ico'
+                            });
+                        }
+                        
+                        // Reset waitlist state now that user is notified
+                        localStorage.removeItem('library_waitlisted');
+                    }
+                }
+                
+                room.occupiedSeats = newOccupied;
+                previousOccupiedSeats[roomId] = newOccupied;
             }
         }
+        
+        // Dynamically update detail stats if currently active
+        if (activeDetailRoomId) {
+            const activeRoom = roomsData.find(r => r.id === activeDetailRoomId);
+            if (activeRoom) {
+                updateRoomDetailUI(activeRoom);
+            }
+        }
+        
+        // Update dashboard lists and overall summaries
+        updateOverallStats();
+        const sortSelect = document.getElementById('sort-select');
+        sortData(sortSelect ? sortSelect.value : 'most-empty');
     });
 }
 
@@ -49,7 +146,7 @@ const roomsData = [
     },
     {
         id: 'book-shelves',
-        title: 'Book Shelves Area',
+        title: 'Book Collection Shelves',
         totalSeats: 30,
         occupiedSeats: 12, // 40% (Green)
         amenities: ['wifi', 'quiet']
@@ -77,14 +174,14 @@ const roomsData = [
     },
     {
         id: 'silent-reading',
-        title: 'Silent Reading Area',
+        title: 'Silent zone/Study area',
         totalSeats: 100,
         occupiedSeats: 95, // 95% (Red)
         amenities: ['wifi', 'quiet']
     },
     {
         id: 'group-work',
-        title: 'Group Work Area',
+        title: 'Group Area Work',
         totalSeats: 40,
         occupiedSeats: 35, // 87.5% (Red)
         amenities: ['wifi', 'power']
@@ -131,6 +228,26 @@ function updateOverallStats() {
     const ring = document.getElementById('overall-ring');
     ring.style.setProperty('--status-color', stateInfo.colorVar);
     ring.style.setProperty('--percentage', percentage + '%');
+    
+    // Update Waitlist Button State
+    const waitlistBtn = document.getElementById('join-waitlist-btn');
+    if (waitlistBtn) {
+        const isWaitlisted = localStorage.getItem('library_waitlisted') === 'true';
+        if (isWaitlisted) {
+            waitlistBtn.innerHTML = '<i class="fa-solid fa-check"></i> On Waitlist';
+            waitlistBtn.classList.add('waitlisted');
+            waitlistBtn.disabled = false;
+        } else {
+            waitlistBtn.classList.remove('waitlisted');
+            if (totalOccupied >= totalCapacity) {
+                waitlistBtn.disabled = false;
+                waitlistBtn.innerHTML = '<i class="fa-solid fa-clock"></i> Join Waitlist';
+            } else {
+                waitlistBtn.disabled = true;
+                waitlistBtn.innerHTML = '<i class="fa-solid fa-clock"></i> Join Waitlist';
+            }
+        }
+    }
 }
 
 // Function to render a single card
@@ -212,36 +329,20 @@ function sortData(sortBy) {
 
 // SPA Routing: Show Room Detail
 function showRoomDetail(room) {
+    activeDetailRoomId = room.id;
     document.getElementById('main-dashboard-view').style.display = 'none';
     document.getElementById('room-detail-view').style.display = 'block';
 
+    updateRoomDetailUI(room);
+
     const percentage = Math.round((room.occupiedSeats / room.totalSeats) * 100);
     const stateInfo = getOccupancyState(percentage);
-
-    // Populate Sidebar Stats
-    document.getElementById('detail-title').textContent = room.title;
-    document.getElementById('detail-percentage').textContent = percentage + '%';
-    document.getElementById('detail-occupied').textContent = room.occupiedSeats;
-    document.getElementById('detail-total').textContent = room.totalSeats;
-    
-    // Update Detail Ring
-    const detailRing = document.getElementById('detail-ring');
-    detailRing.style.setProperty('--status-color', stateInfo.colorVar);
-    detailRing.style.setProperty('--percentage', percentage + '%');
-
-    // Populate Amenities
-    const amenitiesContainer = document.getElementById('detail-amenities');
-    amenitiesContainer.innerHTML = room.amenities.map(amenity => {
-        const iconData = iconMap[amenity];
-        return `<i class="${iconData.class} amenity" title="${iconData.title}"></i>`;
-    }).join('');
-
-    // Generate Chart
     renderChart(room, stateInfo);
 }
 
 // SPA Routing: Show Main Dashboard
 function showDashboard() {
+    activeDetailRoomId = null;
     document.getElementById('room-detail-view').style.display = 'none';
     document.getElementById('main-dashboard-view').style.display = 'block';
 }
@@ -370,42 +471,96 @@ function updateTimestamp() {
     document.getElementById('timestamp-text').textContent = `${dateString}, ${timeString}`;
 }
 
-// Initialize Application
-document.addEventListener('DOMContentLoaded', () => {
-    // Start listening to Firebase for SVG rooms
-    initLiveFloorPlan();
+// Show Premium Toast Alerts
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
     
-    // Initial Render & Stats
-    updateOverallStats();
-    sortData('most-empty');
-    updateTimestamp();
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `
+        <i class="fa-solid fa-circle-check" style="color: var(--state-green);"></i>
+        <span>${message}</span>
+    `;
     
-    // Set initial dummy colors on SVG overlays
-    roomsData.forEach(room => {
-        const percentage = Math.round((room.occupiedSeats / room.totalSeats) * 100);
-        updateSVGRoomColor(room.id, percentage);
+    container.appendChild(toast);
+    
+    // Automatically remove toast after fadeOut completes (5s total)
+    setTimeout(() => {
+        toast.remove();
+    }, 5000);
+}
+
+// Setup Waitlist Button Event Listener
+function setupWaitlistButton() {
+    const waitlistBtn = document.getElementById('join-waitlist-btn');
+    if (!waitlistBtn) return;
+    
+    waitlistBtn.addEventListener('click', () => {
+        if (localStorage.getItem('library_waitlisted') === 'true') {
+            return; // Already subscribed
+        }
+        
+        // Request desktop notifications if browser supports it
+        if ('Notification' in window) {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    console.log('Notification permission granted.');
+                }
+            });
+        }
+        
+        // Set waitlist state
+        localStorage.setItem('library_waitlisted', 'true');
+        
+        // Show success alert toast
+        showToast('Successfully joined waitlist! We will alert you when a seat opens up.', 'success');
+        
+        // Refresh button display states
+        updateOverallStats();
     });
-    
-    // Setup Sort Listener
-    const sortSelect = document.getElementById('sort-select');
+}
+
+// Initialize Application
+setupWaitlistButton();
+
+// Start listening to Firebase for SVG rooms
+initLiveFloorPlan();
+
+// Initial Render & Stats
+updateOverallStats();
+sortData('most-empty');
+updateTimestamp();
+
+// Set initial dummy colors on SVG overlays
+roomsData.forEach(room => {
+    const percentage = Math.round((room.occupiedSeats / room.totalSeats) * 100);
+    updateSVGRoomColor(room.id, percentage);
+});
+
+// Setup Sort Listener
+const sortSelect = document.getElementById('sort-select');
+if (sortSelect) {
     sortSelect.addEventListener('change', (e) => {
         sortData(e.target.value);
     });
+}
 
-    // Setup interactive SVG room clicks
-    roomsData.forEach(room => {
-        const roomElement = document.getElementById(room.id);
-        if (roomElement) {
-            roomElement.addEventListener('click', () => {
-                showRoomDetail(room);
-            });
-        }
-    });
-
-    // Setup Back Button
-    const backBtn = document.getElementById('back-button');
-    backBtn.addEventListener('click', showDashboard);
-    
-    // Poll timestamp every 30 seconds (simulated sync)
-    setInterval(updateTimestamp, 30000);
+// Setup interactive SVG room clicks
+roomsData.forEach(room => {
+    const roomElement = document.getElementById(room.id);
+    if (roomElement) {
+        roomElement.addEventListener('click', () => {
+            showRoomDetail(room);
+        });
+    }
 });
+
+// Setup Back Button
+const backBtn = document.getElementById('back-button');
+if (backBtn) {
+    backBtn.addEventListener('click', showDashboard);
+}
+
+// Poll timestamp every 30 seconds (simulated sync)
+setInterval(updateTimestamp, 30000);
