@@ -21,10 +21,9 @@ try:
     firebase_admin.initialize_app(cred, {
         'databaseURL': FIREBASE_DB_URL
     })
-    # Target room id maps to the specific room tab (e.g., 'silent-reading')
-    target_room_id = 'collaboration-area'
-    ambient_ref = db.reference(f'library/rooms_ambient/{target_room_id}')
-    print(f"Firebase connected! Monitoring room: {target_room_id}")
+    # Reference to the rooms database node
+    ambient_ref = db.reference('library/rooms')
+    print(f"Firebase connected! Monitoring lightCondition at library/rooms")
 except Exception as e:
     print(f"Error connecting to Firebase: {e}")
     print(f"Make sure '{CREDENTIALS_FILE}' is in this directory.")
@@ -79,8 +78,8 @@ while True:
             if line in ["DARK", "BRIGHT"]:
                 # Only update Firebase if the status has changed
                 if line != last_status:
-                    print(f"LDR Status Changed: {line} - Updating Firebase for {target_room_id}...")
-                    ambient_ref.set(line)
+                    print(f"LDR Status Changed: {line} - Updating Firebase lightCondition...")
+                    ambient_ref.update({'lightCondition': line})
                     last_status = line
             elif line:
                 print(f"Raw serial output: {line}")

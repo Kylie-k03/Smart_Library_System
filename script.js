@@ -106,7 +106,16 @@ function initLiveFloorPlan() {
             data = initialData;
         }
         
+        // Extract lightCondition if present (mapped to silent-reading)
+        if (data && data.lightCondition) {
+            roomsAmbient['silent-reading'] = data.lightCondition;
+        }
+        
         for (const [roomId, percentage] of Object.entries(data)) {
+            // Skip non-room keys that might exist in the database (like lightCondition)
+            if (roomId === 'lightCondition' || roomId === 'recommendation' || roomId === 'peopleCount') {
+                continue;
+            }
             updateSVGRoomColor(roomId, percentage);
             
             // Sync Firebase database updates back to our in-memory roomsData structure
@@ -557,49 +566,11 @@ function setupWaitlistButton() {
     });
 }
 
-// Start listening to Firebase for ambient light levels (LDR sensor)
-function initAmbientLightListener() {
-    const ambientRef = ref(db, 'library/rooms_ambient');
-    onValue(ambientRef, (snapshot) => {
-        const data = snapshot.val();
-        if (!data) {
-            // Auto-populate rooms_ambient in database on first run
-            const initialAmbient = {};
-            roomsData.forEach(room => {
-                initialAmbient[room.id] = 'BRIGHT';
-            });
-            set(ambientRef, initialAmbient);
-            return;
-        }
-
-        // Update local status map
-        for (const [roomId, status] of Object.entries(data)) {
-            roomsAmbient[roomId] = status;
-        }
-
-        // Refresh dashboard (which updates the cards)
-        const sortSelect = document.getElementById('sort-select');
-        sortData(sortSelect ? sortSelect.value : 'most-empty');
-
-        // Dynamically update detail stats if currently active
-        if (activeDetailRoomId) {
-            const activeRoom = roomsData.find(r => r.id === activeDetailRoomId);
-            if (activeRoom) {
-                updateRoomDetailUI(activeRoom);
-            }
-        }
-    }, (error) => {
-        console.error("Firebase ambient read failed: ", error);
-        showToast("Firebase ambient connection error. Please check database rules.", "error");
-    });
-}
-
 // Initialize Application
 setupWaitlistButton();
 
 // Start listening to Firebase for SVG rooms
 initLiveFloorPlan();
-initAmbientLightListener();
 
 // Initial Render & Stats
 updateOverallStats();
