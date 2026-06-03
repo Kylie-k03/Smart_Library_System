@@ -21,6 +21,17 @@ let activeDetailRoomId = null;
 // Track previous occupied seats to detect seat availability transitions
 let previousOccupiedSeats = {};
 
+// Track ambient light status of all rooms
+let roomsAmbient = {
+    'collaboration-area': 'BRIGHT',
+    'book-shelves': 'BRIGHT',
+    'meeting-booth': 'BRIGHT',
+    'digital-media': 'BRIGHT',
+    'computer-section': 'BRIGHT',
+    'silent-reading': 'BRIGHT',
+    'group-work': 'BRIGHT'
+};
+
 function getOccupancyColorSVG(percentage) {
     if (percentage >= 0 && percentage <= 49) return "rgba(129, 199, 132, 0.5)";
     if (percentage >= 50 && percentage <= 80) return "rgba(255, 241, 118, 0.5)";
@@ -63,6 +74,20 @@ function updateRoomDetailUI(room) {
             const iconData = iconMap[amenity];
             return `<i class="${iconData.class} amenity" title="${iconData.title}"></i>`;
         }).join('');
+    }
+
+    // Update Room Ambient Status Badge
+    const ambientStatus = roomsAmbient[room.id] || 'BRIGHT';
+    const isDark = ambientStatus === 'DARK';
+    const detailBadge = document.getElementById('detail-ambient-badge');
+    const detailText = document.getElementById('detail-ambient-text');
+    if (detailBadge && detailText) {
+        detailText.textContent = isDark ? 'Dark' : 'Bright';
+        detailBadge.className = isDark ? 'room-card-ambient dark' : 'room-card-ambient bright';
+        const icon = detailBadge.querySelector('i');
+        if (icon) {
+            icon.className = isDark ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+        }
     }
 }
 
@@ -261,12 +286,20 @@ function createRoomCard(room) {
         return `<i class="${iconData.class} amenity" title="${iconData.title}"></i>`;
     }).join('');
 
+    const ambientStatus = roomsAmbient[room.id] || 'BRIGHT';
+    const isDark = ambientStatus === 'DARK';
+    const ambientIcon = isDark ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+    const ambientText = isDark ? 'Dark' : 'Bright';
+
     const card = document.createElement('div');
     card.className = 'room-card';
     card.style.setProperty('--status-color', stateInfo.colorVar);
     
     card.innerHTML = `
-        <div class="card-header">
+        <div class="room-card-ambient ${isDark ? 'dark' : 'bright'}">
+            <i class="${ambientIcon}"></i> Ambient: ${ambientText}
+        </div>
+        <div class="card-header" style="margin-top: 1rem;">
             <h2 class="room-title">${room.title}</h2>
         </div>
         <div class="card-body">
@@ -521,11 +554,46 @@ function setupWaitlistButton() {
     });
 }
 
+// Start listening to Firebase for ambient light levels (LDR sensor)
+function initAmbientLightListener() {
+    const ambientRef = ref(db, 'library/rooms_ambient');
+    onValue(ambientRef, (snapshot) => {
+        const data = snapshot.val();
+        if (!data) {
+            // Auto-populate rooms_ambient in database on first run
+            const initialAmbient = {};
+            roomsData.forEach(room => {
+                initialAmbient[room.id] = 'BRIGHT';
+            });
+            set(ambientRef, initialAmbient);
+            return;
+        }
+
+        // Update local status map
+        for (const [roomId, status] of Object.entries(data)) {
+            roomsAmbient[roomId] = status;
+        }
+
+        // Refresh dashboard (which updates the cards)
+        const sortSelect = document.getElementById('sort-select');
+        sortData(sortSelect ? sortSelect.value : 'most-empty');
+
+        // Dynamically update detail stats if currently active
+        if (activeDetailRoomId) {
+            const activeRoom = roomsData.find(r => r.id === activeDetailRoomId);
+            if (activeRoom) {
+                updateRoomDetailUI(activeRoom);
+            }
+        }
+    });
+}
+
 // Initialize Application
 setupWaitlistButton();
 
 // Start listening to Firebase for SVG rooms
 initLiveFloorPlan();
+initAmbientLightListener();
 
 // Initial Render & Stats
 updateOverallStats();

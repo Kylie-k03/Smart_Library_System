@@ -74,6 +74,36 @@ body {
     display: flex;
     justify-content: flex-end;
     align-items: center;
+    gap: 1rem;
+}
+
+.room-card-ambient {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    background-color: rgba(92, 74, 61, 0.05);
+    color: var(--text-secondary);
+    border: 1px solid rgba(92, 74, 61, 0.15);
+}
+
+.room-card-ambient.bright {
+    background-color: rgba(255, 152, 0, 0.1);
+    color: #E65100;
+    border: 1px solid rgba(255, 152, 0, 0.2);
+}
+
+.room-card-ambient.dark {
+    background-color: rgba(63, 81, 181, 0.1);
+    color: #283593;
+    border: 1px solid rgba(63, 81, 181, 0.2);
 }
 
 .last-synced {

@@ -50,8 +50,8 @@ while True:
         # - 'group-work'       (Capacity: 40 seats)
         # - 'collaboration-area' (Capacity: 60 seats)
         
-        target_room_id = 'silent-reading' 
-        total_seats = 100 
+        target_room_id = 'collaboration-area' 
+        total_seats = 60 
         
         # Calculate percentage (0 to 100)
         occupancy_percentage = min(100, int((person_count / total_seats) * 100))
