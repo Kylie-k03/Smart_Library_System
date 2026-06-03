@@ -109,6 +109,10 @@ function initLiveFloorPlan() {
         // Extract lightCondition if present (mapped to silent-reading)
         if (data && data.lightCondition) {
             roomsAmbient['silent-reading'] = data.lightCondition;
+            console.log("Firebase Light Condition:", data.lightCondition);
+            console.log("Ambient Updated:", roomsAmbient['silent-reading']);
+        } else {
+            console.log("Firebase Light Condition: not present in data", data);
         }
         
         for (const [roomId, percentage] of Object.entries(data)) {
