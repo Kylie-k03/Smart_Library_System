@@ -155,6 +155,9 @@ function initLiveFloorPlan() {
         updateOverallStats();
         const sortSelect = document.getElementById('sort-select');
         sortData(sortSelect ? sortSelect.value : 'most-empty');
+    }, (error) => {
+        console.error("Firebase occupancy read failed: ", error);
+        showToast("Firebase occupancy connection error. Please check database rules.", "error");
     });
 }
 
@@ -585,6 +588,9 @@ function initAmbientLightListener() {
                 updateRoomDetailUI(activeRoom);
             }
         }
+    }, (error) => {
+        console.error("Firebase ambient read failed: ", error);
+        showToast("Firebase ambient connection error. Please check database rules.", "error");
     });
 }
 
