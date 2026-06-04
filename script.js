@@ -353,6 +353,7 @@ function createRoomCard(room) {
 
 // Function to render all cards based on current sorting
 function renderDashboard(data) {
+    console.log("renderDashboard called, data length =", data.length);
     const grid = document.getElementById('room-grid');
     grid.innerHTML = ''; // Clear existing
     
@@ -364,6 +365,7 @@ function renderDashboard(data) {
 
 // Sorting logic
 function sortData(sortBy) {
+    console.log("sortData called, sortBy =", sortBy);
     let sortedData = [...roomsData];
     
     if (sortBy === 'most-empty') {
