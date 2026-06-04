@@ -81,6 +81,11 @@ function updateRoomDetailUI(room) {
     const isDark = ambientStatus === 'DARK';
     const detailBadge = document.getElementById('detail-ambient-badge');
     const detailText = document.getElementById('detail-ambient-text');
+
+    if (room.id === 'silent-reading') {
+        console.log("updateRoomDetailUI (silent-reading) - Status:", ambientStatus, "isDark:", isDark);
+    }
+
     if (detailBadge && detailText) {
         detailText.textContent = isDark ? 'Dark' : 'Bright';
         detailBadge.className = isDark ? 'room-card-ambient dark' : 'room-card-ambient bright';
@@ -306,6 +311,10 @@ function createRoomCard(room) {
     const isDark = ambientStatus === 'DARK';
     const ambientIcon = isDark ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
     const ambientText = isDark ? 'Dark' : 'Bright';
+
+    if (room.id === 'silent-reading') {
+        console.log("createRoomCard (silent-reading) - Status:", ambientStatus, "isDark:", isDark);
+    }
 
     const card = document.createElement('div');
     card.className = 'room-card';
